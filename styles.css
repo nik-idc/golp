@@ -1,0 +1,50 @@
+/* styles.css */
+.container {
+  text-align: center;
+}
+
+body {
+  background-color: rgba(0, 0, 0, 0.536);
+}
+
+button {
+  margin: 10px;
+}
+
+.gamesContainer {
+  display: flex;
+  justify-content: center;
+  border: 1px solid black;
+}
+
+table {
+  margin: 10px 10px 10px 10px;
+  flex: 1;
+  background-color: rgb(158, 217, 214);
+  border-spacing: 0;
+}
+
+td {
+  border: 1px solid rgb(58, 57, 57);
+  border-radius: 3px;
+  /* Height is 2x the width - assuming that the table is square */
+  width: 8px;
+  height: 16px;
+}
+
+span {
+  color: #222;
+}
+
+td.dead {
+  background-color: rgba(109, 48, 179, 0.478);
+  /* border-radius: 10px; */
+}
+
+td.alive {
+  background-color: rgb(109, 48, 179);
+}
+
+.tableSpacer {
+  flex: 0.1;
+}

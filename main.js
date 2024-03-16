@@ -15,9 +15,8 @@ const leftWorker = new Worker("./src/worker.js");
 const rightWorker = new Worker("./src/worker.js");
 leftWorker.postMessage(["setId", leftId]);
 rightWorker.postMessage(["setId", rightId]);
-
-let grid1 = new Grid(sizeInput.value, gamesContainer, leftId, leftWorker);
-let grid2 = new Grid(sizeInput.value, gamesContainer, rightId, rightWorker);
+let grid1 = null;
+let grid2 = null;
 
 const removePrevTables = () => {
   const leftTable = document.getElementById(leftId);
@@ -35,9 +34,6 @@ const makeGrids = () => {
 
   grid1 = new Grid(sizeInput.value, gamesContainer, leftId, leftWorker);
   grid2 = new Grid(sizeInput.value, gamesContainer, rightId, rightWorker);
-
-  grid1.remake();
-  grid2.remake();
 
   stepBackwardButton.disabled = true;
 };

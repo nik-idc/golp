@@ -16,6 +16,7 @@ export class Grid {
     this.isPlaying = false;
     this.worker.onmessage = this.onWorkerMessage;
     this.clearDom();
+    this.remake();
   }
 
   /**

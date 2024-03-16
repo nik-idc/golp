@@ -1,6 +1,9 @@
+/**
+ * Communicates with the GameOfLife worker and draws the table
+ */
 export class Grid {
   /**
-   * Constructs a GameOfLife object
+   * Constructs a Grid object
    * @param {number} size Size of the grid square
    * @param {HTMLDivElement} container Container for the table
    * @param {number} id GameOfLife instance id

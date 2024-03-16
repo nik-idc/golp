@@ -93,21 +93,6 @@ class GameOfLife {
   };
 
   /**
-   * Regenerates data randomly
-   */
-  regenerate = () => {
-    for (let i = 0; i < this.size; i++) {
-      for (let j = 0; j < this.size; j++) {
-        this.rows[i][j] = Math.round(Math.random());
-
-        this.postCellChanged(i, j, this.rows[i][j]);
-      }
-    }
-
-    this.nextRows = JSON.parse(JSON.stringify(this.rows));
-  };
-
-  /**
    * Counts neighbours of the cell specified by row and column
    * @param {number} row Cell row
    * @param {number} col Cell column
@@ -222,11 +207,18 @@ class GameOfLife {
   };
 
   /**
-   * Restarts the game
+   * Regenerates data randomly
    */
-  restart = () => {
-    this.regenerate();
-    this.start();
+  regenerate = () => {
+    for (let i = 0; i < this.size; i++) {
+      for (let j = 0; j < this.size; j++) {
+        this.rows[i][j] = Math.round(Math.random());
+        this.postCellChanged(i, j, this.rows[i][j]);
+      }
+    }
+
+    this.nextRows = JSON.parse(JSON.stringify(this.rows));
+    this.prevRows = JSON.parse(JSON.stringify(this.rows));
   };
 
   /**
@@ -238,7 +230,7 @@ class GameOfLife {
 
     this.intervalId = setInterval(() => {
       this.stepForward();
-    }, stepIntervalMs);
+    }, this.stepIntervalMs);
   };
 
   /**

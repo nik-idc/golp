@@ -1,79 +1,114 @@
 importScripts("./gol.js");
 
-let size = 30;
-let id = "left";
-const stepIntervalMs = 100;
-let gol = new GameOfLife(size, id, stepIntervalMs);
+/**
+ * Class that handles GameOfLife on the current worker thread
+ */
+class WorkerGol {
+  /**
+   * Constructs a WorkerGol object
+   * @param {number} size Size of the 2d world square
+   * @param {string} id GameOfLife instance id
+   * @param {number} stepIntervalMs Interval at which to update the game
+   */
+  constructor(size, id, stepIntervalMs) {
+    this.size = size;
+    this.id = id;
+    this.stepIntervalMs = stepIntervalMs;
 
-const setId = (newId) => {
-  id = newId;
-  gol = new GameOfLife(size, id, stepIntervalMs);
-  gol.postRows();
-};
+    this.gol = new GameOfLife(this.size, this.id, this.stepIntervalMs);
+  }
 
-const remake = (newSize) => {
-  size = newSize;
-  gol = new GameOfLife(size, id, stepIntervalMs);
-  gol.postRows();
-};
+  /**
+   * Sets the GameOfLife instance id and posts current grid to main thread
+   * @param {string} newId New GameOfLife instance id
+   */
+  setId = (newId) => {
+    this.id = newId;
+    this.gol = new GameOfLife(this.size, this.id, this.stepIntervalMs);
+    this.gol.postRows();
+  };
 
-const getRows = () => {
-  gol.postRows();
-};
+  /**
+   * Sets the grid size and posts current grid to main thread
+   * @param {number} newSize New GameOfLife grid size
+   */
+  changeSize = (newSize) => {
+    this.size = newSize;
+    this.gol = new GameOfLife(this.size, this.id, this.stepIntervalMs);
+    this.gol.postRows();
+  };
 
-const regenerateGame = () => {
-  gol.regenerate();
-  gol.postRows();
-};
+  /**
+   * Posts current grid to main thread
+   */
+  getRows = () => {
+    this.gol.postRows();
+  };
 
-const stepForwardGame = () => {
-  gol.stepForward();
-};
+  /**
+   * Regenerates the game and posts current grid to main thread
+   */
+  regenerateGame = () => {
+    this.gol.regenerate();
+    this.gol.postRows();
+  };
 
-const stepBackwardGame = () => {
-  gol.stepBackward();
-};
+  /**
+   * Takes step forward
+   */
+  stepForwardGame = () => {
+    this.gol.stepForward();
+  };
 
-const startGame = () => {
-  gol.start();
-};
+  /**
+   * Takes step backward
+   */
+  stepBackwardGame = () => {
+    this.gol.stepBackward();
+  };
 
-const restartGame = () => {
-  gol.restart();
-};
+  /**
+   * Starts the game
+   */
+  startGame = () => {
+    this.gol.start();
+  };
 
-const stopGame = () => {
-  gol.stop();
-};
+  /**
+   * Stops the game
+   */
+  stopGame = () => {
+    this.gol.stop();
+  };
+}
+
+const workerGol = new WorkerGol(30, "left", 100);
 
 onmessage = function (e) {
   switch (e.data[0]) {
     case "setId":
-      setId(e.data[1]);
+      workerGol.setId(e.data[1]);
       break;
-    case "remake":
-      remake(e.data[1]);
+    case "changeSize":
+      workerGol.changeSize(e.data[1]);
       break;
     case "getRows":
-      getRows();
+      workerGol.getRows();
       break;
     case "regenerate":
-      regenerateGame();
+      workerGol.regenerateGame();
       break;
     case "stepForward":
-      stepForwardGame();
+      workerGol.stepForwardGame();
       break;
     case "stepBackward":
-      stepBackwardGame();
+      workerGol.stepBackwardGame();
       break;
     case "start":
-      startGame();
-      break;
-    case "restart":
-      restartGame();
+      workerGol.startGame();
       break;
     case "stop":
-      stopGame();
+      workerGol.stopGame();
       break;
     default:
       break;

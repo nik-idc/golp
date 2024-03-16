@@ -1,5 +1,6 @@
 import { Grid } from "./src/grid.js";
 
+// Get all controls from the DOM
 const sizeInput = document.getElementById("sizeInput");
 const gamesContainer = document.querySelector(".gamesContainer");
 const genButton = document.getElementById("genButton");
@@ -9,6 +10,7 @@ const startButton = document.getElementById("startButton");
 const stopButton = document.getElementById("stopButton");
 sizeInput.value = 30;
 
+// Create workers
 const leftId = "left";
 const rightId = "right";
 const leftWorker = new Worker("./src/worker.js");
@@ -18,6 +20,9 @@ rightWorker.postMessage(["setId", rightId]);
 let grid1 = null;
 let grid2 = null;
 
+/**
+ * Removes tables
+ */
 const removePrevTables = () => {
   const leftTable = document.getElementById(leftId);
   const rightTable = document.getElementById(rightId);
@@ -29,6 +34,9 @@ const removePrevTables = () => {
   }
 };
 
+/**
+ * Re/makes the grids
+ */
 const makeGrids = () => {
   removePrevTables();
 
@@ -38,6 +46,9 @@ const makeGrids = () => {
   stepBackwardButton.disabled = true;
 };
 
+/**
+ * Main function
+ */
 const main = () => {
   makeGrids();
 

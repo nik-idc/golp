@@ -16,7 +16,7 @@ export class Grid {
     this.isPlaying = false;
     this.worker.onmessage = this.onWorkerMessage;
     this.clearDom();
-    this.remake();
+    this.changeSize();
   }
 
   /**
@@ -113,8 +113,8 @@ export class Grid {
    * (remake - recreate GameOfLife instance with new size)
    * (regenerate) - keep the same instance but regenerate the cells
    */
-  remake = () => {
-    this.worker.postMessage(["remake", this.size]);
+  changeSize = () => {
+    this.worker.postMessage(["changeSize", this.size]);
   };
 
   /**
@@ -169,13 +169,6 @@ export class Grid {
    */
   startGame = () => {
     this.worker.postMessage(["start"]);
-  };
-
-  /**
-   * Restart the game
-   */
-  restartGame = () => {
-    this.worker.postMessage(["restart"]);
   };
 
   /**

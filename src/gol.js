@@ -1,46 +1,71 @@
-import { config } from "./config.js";
-
-const createRows = (size, value) => {
-  const rows = [];
-  for (let i = 0; i < size; i++) {
-    const row = [];
-    for (let j = 0; j < size; j++) {
-      row.push(value);
-    }
-    rows.push(row);
-  }
-
-  return rows;
-};
+const stepIntervalMs = 100;
 
 class GOLEventArgs {
-  constructor(row, col, id, alive) {
-    this.row = row;
-    this.col = col;
+  constructor(id, data) {
     this.id = id;
-    this.alive = alive;
+    this.data = data;
   }
 }
 
 /**
  * Implements the logic of the Game Of Life
  */
-export class GameOfLife {
+class GameOfLife {
   /**
    * Constructs a GameOfLife object
-   * @param {number} size Array of game of life data
+   * @param {number} size Size of the 2d world square
    * @param {string} id Id of the game
+   * @param {Worker} worker Worker instance to talk to the main thread
+   * @param {number} stepIntervalMs Interval at which to update the game
    */
-  constructor(size, id) {
-    this.rows = createRows(size, false);
-    this.nextRows = JSON.parse(JSON.stringify(this.rows));
-    this.size = this.rows.length;
-
+  constructor(size, id, worker, stepIntervalMs) {
+    this.size = size;
     this.id = id;
+    this.worker = worker;
+    this.stepIntervalMs = stepIntervalMs;
 
+    this.rows = GameOfLife.createRows(this.size, false);
+    this.nextRows = GameOfLife.createRows(this.size, false);
     this.isPlaying = false;
     this.intervalId = null;
   }
+
+  static createRows = (size, value) => {
+    const rows = [];
+    for (let i = 0; i < size; i++) {
+      const row = [];
+      for (let j = 0; j < size; j++) {
+        row.push(value);
+      }
+      rows.push(row);
+    }
+
+    return rows;
+  };
+
+  postRows = () => {
+    postMessage(["rows", new GOLEventArgs(this.id, { rows: this.rows })]);
+  };
+
+  postCellChanged = (row, col, alive) => {
+    postMessage([
+      "cellChanged",
+      new GOLEventArgs(this.id, {
+        row: row,
+        col: col,
+        alive: alive,
+      }),
+    ]);
+  };
+
+  postIsPlayingChanged = () => {
+    postMessage([
+      "isPlayingChanged",
+      new GOLEventArgs(this.id, {
+        isPlaying: this.isPlaying,
+      }),
+    ]);
+  };
 
   /**
    * Regenerates data randomly
@@ -50,11 +75,7 @@ export class GameOfLife {
       for (let j = 0; j < this.size; j++) {
         this.rows[i][j] = Math.round(Math.random());
 
-        document.dispatchEvent(
-          new CustomEvent("cellChanged", {
-            detail: new GOLEventArgs(i, j, this.id, this.rows[i][j]),
-          })
-        );
+        this.postCellChanged(i, j, this.rows[i][j]);
       }
     }
 
@@ -124,11 +145,7 @@ export class GameOfLife {
   killCell = (cellRow, cellCol) => {
     this.nextRows[cellRow][cellCol] = false;
 
-    document.dispatchEvent(
-      new CustomEvent("cellChanged", {
-        detail: new GOLEventArgs(cellRow, cellCol, this.id, false),
-      })
-    );
+    this.postCellChanged(cellRow, cellCol, this.nextRows[cellRow][cellCol]);
   };
 
   /**
@@ -139,11 +156,7 @@ export class GameOfLife {
   birthCell = (cellRow, cellCol) => {
     this.nextRows[cellRow][cellCol] = true;
 
-    document.dispatchEvent(
-      new CustomEvent("cellChanged", {
-        detail: new GOLEventArgs(cellRow, cellCol, this.id, true),
-      })
-    );
+    this.postCellChanged(cellRow, cellCol, this.nextRows[cellRow][cellCol]);
   };
 
   /**
@@ -165,22 +178,25 @@ export class GameOfLife {
    */
   restart = () => {
     this.regenerate();
-    
     this.start();
   };
 
   start = () => {
     this.isPlaying = true;
+    this.postIsPlayingChanged();
+
     this.intervalId = setInterval(() => {
       this.step();
-    }, config.stepIntervalMs);
-  }
+    }, stepIntervalMs);
+  };
 
   /**
    * Stop the game
    */
   stop = () => {
     this.isPlaying = false;
+    this.postIsPlayingChanged();
+
     clearInterval(this.intervalId);
   };
 }

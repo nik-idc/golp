@@ -1,24 +1,68 @@
-import { config } from "./config.js";
-import { GameOfLife } from "./gol.js";
-
 export class Grid {
   /**
    *
-   * @param {number} size
-   * @param {HTMLDivElement} container
+   * @param {*} size
+   * @param {*} container
+   * @param {*} id
+   * @param {Worker} worker
    */
-  constructor(size, container, id) {
+  constructor(size, container, id, worker) {
     this.size = size;
     this.container = container;
     this.id = id;
+    this.worker = worker;
 
-    this.clear();
-    this.gol = new GameOfLife(this.size, this.id);
-
-    document.addEventListener("cellChanged", this.onCellChanged);
+    this.rows = null;
+    this.isPlaying = false;
+    this.worker.onmessage = this.onWorkerMessage;
+    this.clearDom();
   }
 
-  clear = () => {
+  onRowsReceived = (eventArgs) => {
+    if (eventArgs.id === this.id) {
+      this.rows = JSON.parse(JSON.stringify(eventArgs.data.rows));
+      this.draw();
+    }
+  };
+
+  onIsPlayingChanged = (eventArgs) => {
+    if (eventArgs.id === this.id) {
+      this.isPlaying = eventArgs.data.isPlaying;
+    }
+  };
+
+  onCellChanged = (eventArgs) => {
+    if (eventArgs.id !== this.id) {
+      return;
+    }
+
+    const cell = document.getElementById(
+      `c:${eventArgs.data.row}:${eventArgs.data.col}:${this.id}`
+    );
+    if (eventArgs.data.alive) {
+      cell.setAttribute("class", "alive");
+    } else {
+      cell.setAttribute("class", "dead");
+    }
+  };
+
+  onWorkerMessage = (e) => {
+    const message = e.data[0];
+    switch (message) {
+      case "rows":
+        this.onRowsReceived(e.data[1]);
+        break;
+      case "isPlayingChanged":
+        this.onIsPlayingChanged(e.data[1]);
+        break;
+      case "cellChanged":
+        this.onCellChanged(e.data[1]);
+      default:
+        break;
+    }
+  };
+
+  clearDom = () => {
     if (this.table) {
       this.container.removeChild(this.table);
     }
@@ -28,19 +72,23 @@ export class Grid {
     this.container.appendChild(this.table);
   };
 
+  remake = () => {
+    this.worker.postMessage(["remake", this.size]);
+  };
+
   /**
    * Draws the grid using the HTML table
    */
   draw = () => {
-    this.clear();
+    this.clearDom();
 
     for (let i = 0; i < this.size; i++) {
       const tr = document.createElement("tr");
-      tr.setAttribute("id", `r${i}`);
+      tr.setAttribute("id", `r:${i}:${this.id}`);
       for (let j = 0; j < this.size; j++) {
         const td = document.createElement("td");
-        td.setAttribute("id", `${i}:${j}:${this.id}`);
-        if (this.gol.rows[i][j]) {
+        td.setAttribute("id", `c:${i}:${j}:${this.id}`);
+        if (this.rows[i][j]) {
           td.setAttribute("class", "alive");
         } else {
           td.setAttribute("class", "dead");
@@ -52,55 +100,23 @@ export class Grid {
     }
   };
 
-  onCellChanged = (event) => {
-    if (event.detail.id !== this.id) {
-      return;
-    }
-
-    const cell = document.getElementById(
-      `${event.detail.row}:${event.detail.col}:${this.id}`
-    );
-    if (event.detail.alive) {
-      cell.setAttribute("class", "alive");
-    } else {
-      cell.setAttribute("class", "dead");
-    }
-  };
-
-  isPlaying = () => {
-    return this.gol.isPlaying;
-  }
-
   regenerateGame = () => {
-    this.gol.regenerate();
+    this.worker.postMessage(["regenerate"]);
   };
 
   stepGame = () => {
-    this.gol.step();
+    this.worker.postMessage(["step"]);
   };
 
   startGame = () => {
-    this.gol.start();
+    this.worker.postMessage(["start"]);
   };
 
   restartGame = () => {
-    this.gol.restart();
+    this.worker.postMessage(["restart"]);
   };
 
   stopGame = () => {
-    this.gol.stop();
+    this.worker.postMessage(["stop"]);
   };
 }
-
-export const makeGrids = () => {
-  const size = config.size;
-
-  const leftTable = document.getElementById("left");
-  const rightTable = document.getElementById("right");
-
-  const grid1 = new Grid(size, size, leftTable);
-  const grid2 = new Grid(size, size, rightTable);
-
-  grid1.draw();
-  grid2.draw();
-};

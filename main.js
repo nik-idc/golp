@@ -1,10 +1,4 @@
-import { config } from "./src/config.js";
 import { Grid } from "./src/grid.js";
-
-let grids = { grid1: null, grid2: null };
-
-const leftId = "left";
-const rightId = "right";
 
 const sizeInput = document.getElementById("sizeInput");
 const gamesContainer = document.querySelector(".gamesContainer");
@@ -14,6 +8,14 @@ const stepButton = document.getElementById("stepButton");
 const startButton = document.getElementById("startButton");
 const stopButton = document.getElementById("stopButton");
 sizeInput.value = 30;
+
+const leftId = "left";
+const rightId = "right";
+const leftWorker = new Worker("./src/leftWorker.js");
+const rightWorker = new Worker("./src/rightWorker.js");
+
+let grid1 = new Grid(sizeInput.value, gamesContainer, leftId, leftWorker);
+let grid2 = new Grid(sizeInput.value, gamesContainer, rightId, rightWorker);
 
 const removePrevTables = () => {
   const leftTable = document.getElementById(leftId);
@@ -29,26 +31,17 @@ const removePrevTables = () => {
 const makeGrids = () => {
   removePrevTables();
 
-  const size = sizeInput.value;
-  grids.grid1 = new Grid(size, gamesContainer, leftId);
-  grids.grid2 = new Grid(size, gamesContainer, rightId);
+  grid1 = new Grid(sizeInput.value, gamesContainer, leftId, leftWorker);
+  grid2 = new Grid(sizeInput.value, gamesContainer, rightId, rightWorker);
 
-  grids.grid1.draw();
-  grids.grid2.draw();
+  grid1.remake();
+  grid2.remake();
 };
 
 const main = () => {
   makeGrids();
 
   drawButton.addEventListener("click", () => {
-    if (
-      grids.grid1 !== null &&
-      grids.grid2 !== null &&
-      (grids.grid1.isPlaying() || grids.grid2.isPlaying())
-    ) {
-      return;
-    }
-
     if (!sizeInput.value) {
       alert("Input size first!");
       return;
@@ -58,45 +51,18 @@ const main = () => {
   });
 
   genButton.addEventListener("click", () => {
-    if (grids.grid1 === null || grids.grid2 === null) {
-      alert("Draw grid first!");
-      return;
-    }
-
-    if (grids.grid1.isPlaying() || grids.grid2.isPlaying()) {
-      return;
-    }
-
-    grids.grid1.regenerateGame();
-    grids.grid2.regenerateGame();
+    grid1.regenerateGame();
+    grid2.regenerateGame();
   });
 
   stepButton.addEventListener("click", () => {
-    if (grids.grid1 === null || grids.grid2 === null) {
-      alert("Draw grid first!");
-      return;
-    }
-
-    if (grids.grid1.isPlaying() || grids.grid2.isPlaying()) {
-      return;
-    }
-
-    grids.grid1.stepGame();
-    grids.grid2.stepGame();
+    grid1.stepGame();
+    grid2.stepGame();
   });
 
   startButton.addEventListener("click", () => {
-    if (grids.grid1 === null || grids.grid2 === null) {
-      alert("Draw grid first!");
-      return;
-    }
-
-    if (grids.grid1.isPlaying() || grids.grid2.isPlaying()) {
-      return;
-    }
-
-    grids.grid1.startGame();
-    grids.grid2.startGame();
+    grid1.startGame();
+    grid2.startGame();
 
     drawButton.disabled = true;
     genButton.disabled = true;
@@ -105,13 +71,8 @@ const main = () => {
   });
 
   stopButton.addEventListener("click", () => {
-    if (grids.grid1 === null || grids.grid2 === null) {
-      alert("Draw grid first!");
-      return;
-    }
-
-    grids.grid1.stopGame();
-    grids.grid2.stopGame();
+    grid1.stopGame();
+    grid2.stopGame();
 
     drawButton.disabled = false;
     genButton.disabled = false;

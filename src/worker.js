@@ -1,13 +1,19 @@
-// import { GameOfLife } from "./gol.js";
 importScripts("./gol.js");
 
 let size = 30;
-const id = "left";
-let gol = new GameOfLife(size, id);
+let id = "left";
+const stepIntervalMs = 100;
+let gol = new GameOfLife(size, id, stepIntervalMs);
+
+const setId = (newId) => {
+  id = newId;
+  gol = new GameOfLife(size, id, stepIntervalMs);
+  gol.postRows();
+};
 
 const remake = (newSize) => {
   size = newSize;
-  gol = new GameOfLife(size, id);
+  gol = new GameOfLife(size, id, stepIntervalMs);
   gol.postRows();
 };
 
@@ -20,9 +26,12 @@ const regenerateGame = () => {
   gol.postRows();
 };
 
-const stepGame = () => {
-  gol.step();
-  gol.postRows();
+const stepForwardGame = () => {
+  gol.stepForward();
+};
+
+const stepBackwardGame = () => {
+  gol.stepBackward();
 };
 
 const startGame = () => {
@@ -39,6 +48,9 @@ const stopGame = () => {
 
 onmessage = function (e) {
   switch (e.data[0]) {
+    case "setId":
+      setId(e.data[1]);
+      break;
     case "remake":
       remake(e.data[1]);
       break;
@@ -48,8 +60,11 @@ onmessage = function (e) {
     case "regenerate":
       regenerateGame();
       break;
-    case "step":
-      stepGame();
+    case "stepForward":
+      stepForwardGame();
+      break;
+    case "stepBackward":
+      stepBackwardGame();
       break;
     case "start":
       startGame();

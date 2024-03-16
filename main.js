@@ -2,17 +2,19 @@ import { Grid } from "./src/grid.js";
 
 const sizeInput = document.getElementById("sizeInput");
 const gamesContainer = document.querySelector(".gamesContainer");
-const drawButton = document.getElementById("drawButton");
 const genButton = document.getElementById("genButton");
-const stepButton = document.getElementById("stepButton");
+const stepForwardButton = document.getElementById("stepForwardButton");
+const stepBackwardButton = document.getElementById("stepBackwardButton");
 const startButton = document.getElementById("startButton");
 const stopButton = document.getElementById("stopButton");
 sizeInput.value = 30;
 
 const leftId = "left";
 const rightId = "right";
-const leftWorker = new Worker("./src/leftWorker.js");
-const rightWorker = new Worker("./src/rightWorker.js");
+const leftWorker = new Worker("./src/worker.js");
+const rightWorker = new Worker("./src/worker.js");
+leftWorker.postMessage(["setId", leftId]);
+rightWorker.postMessage(["setId", rightId]);
 
 let grid1 = new Grid(sizeInput.value, gamesContainer, leftId, leftWorker);
 let grid2 = new Grid(sizeInput.value, gamesContainer, rightId, rightWorker);
@@ -36,37 +38,48 @@ const makeGrids = () => {
 
   grid1.remake();
   grid2.remake();
+
+  stepBackwardButton.disabled = true;
 };
 
 const main = () => {
   makeGrids();
 
-  drawButton.addEventListener("click", () => {
+  genButton.addEventListener("click", () => {
     if (!sizeInput.value) {
-      alert("Input size first!");
+      alert("Input size first");
+      return;
+    }
+
+    if (Number(sizeInput.value) <= 4) {
+      alert("Input size too small");
       return;
     }
 
     makeGrids();
   });
 
-  genButton.addEventListener("click", () => {
-    grid1.regenerateGame();
-    grid2.regenerateGame();
+  stepForwardButton.addEventListener("click", () => {
+    grid1.stepForwardGame();
+    grid2.stepForwardGame();
+
+    stepBackwardButton.disabled = false;
   });
 
-  stepButton.addEventListener("click", () => {
-    grid1.stepGame();
-    grid2.stepGame();
+  stepBackwardButton.addEventListener("click", () => {
+    grid1.stepBackwardGame();
+    grid2.stepBackwardGame();
+
+    stepBackwardButton.disabled = true;
   });
 
   startButton.addEventListener("click", () => {
     grid1.startGame();
     grid2.startGame();
 
-    drawButton.disabled = true;
     genButton.disabled = true;
-    stepButton.disabled = true;
+    stepForwardButton.disabled = true;
+    stepBackwardButton.disabled = true;
     startButton.disabled = true;
   });
 
@@ -74,9 +87,9 @@ const main = () => {
     grid1.stopGame();
     grid2.stopGame();
 
-    drawButton.disabled = false;
     genButton.disabled = false;
-    stepButton.disabled = false;
+    stepForwardButton.disabled = false;
+    stepBackwardButton.disabled = false;
     startButton.disabled = false;
   });
 };

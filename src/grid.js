@@ -1,10 +1,10 @@
 export class Grid {
   /**
-   *
-   * @param {*} size
-   * @param {*} container
-   * @param {*} id
-   * @param {Worker} worker
+   * Constructs a GameOfLife object
+   * @param {number} size Size of the grid square
+   * @param {HTMLDivElement} container Container for the table
+   * @param {number} id GameOfLife instance id
+   * @param {Worker} worker Worker object
    */
   constructor(size, container, id, worker) {
     this.size = size;
@@ -18,6 +18,13 @@ export class Grid {
     this.clearDom();
   }
 
+  /**
+   * Reacts to rows received
+   * @param {Object} eventArgs Event arguments
+   * @param {number} eventArgs.id GameOfLife instance id
+   * @param {Object} eventArgs.data Event data
+   * @param {boolean[][]} eventArgs.data.rows GameOfLife instance rows
+   */
   onRowsReceived = (eventArgs) => {
     if (eventArgs.id === this.id) {
       this.rows = JSON.parse(JSON.stringify(eventArgs.data.rows));
@@ -25,12 +32,28 @@ export class Grid {
     }
   };
 
+  /**
+   * Reacts to rows received
+   * @param {Object} eventArgs Event arguments
+   * @param {number} eventArgs.id GameOfLife instance id
+   * @param {Object} eventArgs.data Event data
+   * @param {boolean} eventArgs.data.isPlaying GameOfLife instance playing state
+   */
   onIsPlayingChanged = (eventArgs) => {
     if (eventArgs.id === this.id) {
       this.isPlaying = eventArgs.data.isPlaying;
     }
   };
 
+  /**
+   * Reacts to rows received
+   * @param {Object} eventArgs Event arguments
+   * @param {number} eventArgs.id GameOfLife instance id
+   * @param {Object} eventArgs.data Event data
+   * @param {number} eventArgs.data.row Cell row
+   * @param {number} eventArgs.data.col Cell col
+   * @param {boolean} eventArgs.data.alive Cell alive status
+   */
   onCellChanged = (eventArgs) => {
     if (eventArgs.id !== this.id) {
       return;
@@ -39,29 +62,41 @@ export class Grid {
     const cell = document.getElementById(
       `c:${eventArgs.data.row}:${eventArgs.data.col}:${this.id}`
     );
-    if (eventArgs.data.alive) {
-      cell.setAttribute("class", "alive");
-    } else {
-      cell.setAttribute("class", "dead");
+    if (cell !== null) {
+      if (eventArgs.data.alive) {
+        cell.setAttribute("class", "alive");
+      } else {
+        cell.setAttribute("class", "dead");
+      }
     }
   };
 
-  onWorkerMessage = (e) => {
-    const message = e.data[0];
-    switch (message) {
+  /**
+   * Reacts to worker message
+   * @param {Object} message Worker message
+   * @param {[string, Object]} message.data Message data
+   */
+  onWorkerMessage = (message) => {
+    const type = message.data[0];
+    const data = message.data[1];
+
+    switch (type) {
       case "rows":
-        this.onRowsReceived(e.data[1]);
+        this.onRowsReceived(data);
         break;
       case "isPlayingChanged":
-        this.onIsPlayingChanged(e.data[1]);
+        this.onIsPlayingChanged(data);
         break;
       case "cellChanged":
-        this.onCellChanged(e.data[1]);
+        this.onCellChanged(data);
       default:
         break;
     }
   };
 
+  /**
+   * Clears the table from the DOM
+   */
   clearDom = () => {
     if (this.table) {
       this.container.removeChild(this.table);
@@ -72,6 +107,11 @@ export class Grid {
     this.container.appendChild(this.table);
   };
 
+  /**
+   * Post message to worker to remake the game
+   * (remake - recreate GameOfLife instance with new size)
+   * (regenerate) - keep the same instance but regenerate the cells
+   */
   remake = () => {
     this.worker.postMessage(["remake", this.size]);
   };
@@ -100,22 +140,46 @@ export class Grid {
     }
   };
 
+  /**
+   * Post message to worker to regenerate the game
+   * (remake - recreate GameOfLife instance with new size)
+   * (regenerate) - keep the same instance but regenerate the cells
+   */
   regenerateGame = () => {
     this.worker.postMessage(["regenerate"]);
   };
 
-  stepGame = () => {
-    this.worker.postMessage(["step"]);
+  /**
+   * Take a step forward in the game
+   */
+  stepForwardGame = () => {
+    this.worker.postMessage(["stepForward"]);
   };
 
+  /**
+   * Take a step forward in the game
+   */
+  stepBackwardGame = () => {
+    this.worker.postMessage(["stepBackward"]);
+  };
+
+  /**
+   * Start the game
+   */
   startGame = () => {
     this.worker.postMessage(["start"]);
   };
 
+  /**
+   * Restart the game
+   */
   restartGame = () => {
     this.worker.postMessage(["restart"]);
   };
 
+  /**
+   * Stop the game
+   */
   stopGame = () => {
     this.worker.postMessage(["stop"]);
   };

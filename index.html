@@ -1,4 +1,3 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -7,10 +6,16 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <h1>GOLP</h1>
+    <div class="title">
+      <h1>Game Of Life Parallelized: GOLP</h1>
+    </div>
     <div class="container">
       <div class="inputsContainer">
-        <input id="sizeInput" type="text" />
+        <label for="sizeInput"
+          >Grid side size &lpar;click 'Regenerate' to apply&rpar;:</label
+        >
+        <input id="sizeInput" type="number" />
+        <label for="sizeInput">squares</label>
       </div>
       <div class="buttonsContainer">
         <button id="genButton">Regenerate</button>
